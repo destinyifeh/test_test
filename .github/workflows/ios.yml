@@ -21,23 +21,12 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo gem install cocoapods
+          sudo gem install fastlane
           npm install
 
-      - name: Install CocoaPods
+      - name: Install iOS dependencies (Pods) and run fastlane
+        working-directory: ios
         run: |
-          sudo gem install cocoapods
-          cd ios    
           pod install
-          cd ..
-
-      - name: Install Fastlane
-        run: |
-          gem install fastlane
-
-      - name: Build and upload iOS app
-        env:
-          FIREBASE_IOS_APP_ID: ${{secrets.FIREBASE_IOS_APP_ID}}
-          CREDENTIAL_FILE_CONTENT: ${{secrets.CREDENTIAL_FILE_CONTENT}}
-        run: |
-          cd ios 
           fastlane ios_build
