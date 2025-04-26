@@ -28,8 +28,8 @@ platform :ios do
     output_directory: "./build", # Ensure we know where the IPA is saved
     output_name: "testing.ipa",  # So you can refer to it directly
    #local build setup only
-    skip_certificate_verification: true,
-      export_options: {
+   
+    export_options: {
         signingStyle: "automatic",
         compileBitcode: false,
       },
