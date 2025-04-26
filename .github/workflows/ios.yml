@@ -25,7 +25,7 @@ jobs:
 
       - name: Install CocoaPods
         run: |
-          sudo gem install cocoaPods
+          sudo gem install cocoapods
           cd ios    
           pos install
           cd ..
