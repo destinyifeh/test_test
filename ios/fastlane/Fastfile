@@ -26,7 +26,7 @@ platform :ios do
     export_method: "development",
     clean:true,
     output_directory: "./build", # Ensure we know where the IPA is saved
-    output_name: "testing.ipa"   # So you can refer to it directly
+    output_name: "testing.ipa",  # So you can refer to it directly
     xcargs: "-allowProvisioningUpdates" # For automatic provisioning signin for fastlane and github workflow
     ) 
    
