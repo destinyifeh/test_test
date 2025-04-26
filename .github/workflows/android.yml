@@ -1,0 +1,96 @@
+name: Android CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎️ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🛠️ Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 🔧 Install dependencies
+        run: |
+          npm install
+
+      - name: ✅ Run unit tests
+        run: npm run test
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🧰 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🗂️ Ensure bundle directories exist
+        run: |
+          mkdir -p android/app/src/main/assets
+          mkdir -p android/app/src/main/res
+
+      - name: 📦 Bundle JavaScript
+        run: |
+          npx react-native bundle \
+          --platform android \
+          --dev false \
+          --entry-file index.js \
+          --bundle-output android/app/src/main/assets/index.android.bundle \
+          --assets-dest android/app/src/main/res
+
+      - name: 🔨 Build APK
+        run: |
+          cd android
+          ./gradlew clean
+          ./gradlew assembleRelease
+
+      - name: 📦 Upload Split APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: split-apks
+          path: android/app/build/outputs/apk/release/*.apk
+          #name: app-armeabi-v7a
+          #path: android/app/build/outputs/apk/release/app-universal-release.apk
+
+      - name: Upload a file to Google Drive
+        uses: intersecato/google-drive-uploader@1.2
+        id: driveUpload
+        with:
+          target: android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
+          folder: ${{ secrets.GDRIVE_FOLDER_ID }}
+
+      - name: 📧 Send email with APK using Gmail SMTP
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_PASSWORD }}
+          subject: '🚀 New APK Build (test-repo)'
+          to: destechofficial@gmail.com
+          from: Dez
+          body: |
+            Build Successful! Download here: ${{ steps.driveUpload.outputs.fileLink }}
+          #attachments: android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+
+      - name: upload artifact to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          serviceCredentialsFileContent: ${{secrets.CREDENTIAL_FILE_CONTENT}}
+          groups: testers
+          file: android/app/build/outputs/apk/release/app-armeabi-v7a-release.apk
+          debug: true
+          releaseNotesFile: android/app/release-note.txt
