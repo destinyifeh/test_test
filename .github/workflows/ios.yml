@@ -27,7 +27,7 @@ jobs:
         run: |
           sudo gem install cocoapods
           cd ios    
-          pos install
+          pod install
           cd ..
 
       - name: Install Fastlane
